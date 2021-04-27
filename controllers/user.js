@@ -16,8 +16,6 @@ const PSW = require('../utils/password')
 
 const { User } = require('../models/user');
 
-console.log(User, 'userMosel--------')
-
 /**
  * 读取 github 用户信息
  * @param {String} username - github 登录名
@@ -26,6 +24,20 @@ async function getGithubInfo(username) {
     const result = await axios.get(`${GITHUB.fetch_user}/${username}`)
     return result && result.data
 }
+
+//解析get参数
+parseBody = (str) => {
+    const arr = str.split('?')
+    const temp = arr[1]
+    const obj = {}
+    const res = temp.split('&')
+    res.forEach(element => {
+        let resultA = element.split('=')
+        obj[resultA[0]] = resultA[1]
+    })
+    return obj
+}
+
 
 class UserController {
     // ===== utils methods
@@ -70,49 +82,40 @@ class UserController {
 
     // 登录
     static async login(ctx) {
-        let code = ctx.request.body['code']
-        if (!code) {
-            code = ctx.query['code']
-        }
-        if (code) {
-            await UserController.githubLogin(ctx, code)
-        } else {
-            await UserController.defaultLogin(ctx);
-        }
+        await UserController.defaultLogin(ctx);
     }
 
     // 站内用户登录
     // 使用
     static async defaultLogin(ctx) {
         console.log('4-----y', ctx, 'ctx-----')
-        const validator = ctx.validate(ctx.request.body, {
-            nickName: Joi.string(),
+        const urlGet = ctx.url
+        const result = parseBody(urlGet)
+        console.log('result----', result)
+        const validator = ctx.validate(result, {
+            nickname: Joi.string(),
             password: Joi.string(),
         });
         if (validator) {
-            const { nickName, password } = ctx.request.body
-
-            const user = await UserModel.findOne({
-                where: {
-                    // $or: { email: account, username: account }
-                    username: nickName,
-                },
+            const { nickname, password } = result
+            const user = await User.findOne({
+                where: { u_nickname: nickname },
             });
 
             if (!user) {
                 // ctx.client(403, '用户不存在')
-                ctx.throw(403, '用户不存在')
+                ctx.body = { status: 403, text: '用户不存在' }
             } else {
                 // const isMatch = await comparePassword(PSW.default.decrypt(password), user.password)
                 const isMatch = await comparePassword(password, user.password);
                 if (!isMatch) {
                     // ctx.client(403, '密码不正确')
-                    ctx.throw(403, '密码不正确')
+                    // ctx.throw(403, '密码不正确')
+                    ctx.body = { status: 403, text: '密码不正确' }
                 } else {
-                    const { id, role } = user
-                    const token = createToken({ username: user.username, userId: id, role }) // 生成 token
-                        // ctx.client(200, '登录成功', { username: user.username, role, userId: id, token })
-                    ctx.body = { username: user.username, role, userId: id, token, email: user.email }
+                    const { id } = user
+                    // ctx.client(200, '登录成功', { username: user.username, role, userId: id, token })
+                    ctx.body = { username: user.u_username, userId: id }
                 }
             }
         }

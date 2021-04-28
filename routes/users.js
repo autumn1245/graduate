@@ -10,7 +10,8 @@ const {
     login
 } = require('../controllers/user');
 
-router.get('/find/:username', findUser)
+// router.get('/find/:nickname', findUser)
+router.get('/find', findUser)
 router.get('/list', getList) // 获取列表
 router.get('/', login)
 router.post('/register', register)

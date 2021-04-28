@@ -49,17 +49,17 @@ class UserController {
     }
 
     static async findUser(ctx) {
+        console.log('findUser====', ctx, '=======', ctx.params, '=======', ctx.query)
         const validator = ctx.validate({...ctx.params, ...ctx.query }, {
-            username: Joi.string().required(),
+            nickname: Joi.string().required(),
         })
         if (validator) {
-            const username = ctx.params.username
-            const user = await UserModel.findOne({ where: { username } })
-            ctx.status = 200
+            const nickname = ctx.params.nickname
+            const user = await User.findOne({ where: { u_nickname: nickname } });
             if (user) {
-                ctx.body = { id: user.id }
+                ctx.body = { status:200, id: user.id, data: user  }
             } else {
-                ctx.body = {}
+                ctx.body = {  status : 200}
             }
         }
     }

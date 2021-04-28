@@ -3,9 +3,6 @@ const user = require('./users');
 
 // let router = new Router();
 
-
-
-
 router.use(user.routes())
 
 // router.get('/', async (ctx, next) => {

@@ -25,7 +25,6 @@ app.use(views(__dirname + '/views', {
     extension: 'pug'
 }))
 
-
 app.use(async(ctx, next) => {
     const start = new Date()
         // await next()
@@ -67,7 +66,7 @@ app.on('error', (err, ctx) => {
 // const app = new Koa()
 // context binding...
 const context = require('./utils/context')
-const router = require('./routes/users')
+    // const router = require('./routes/users')
 Object.keys(context).forEach(key => {
     app.context[key] = context[key] // 绑定上下文对象
 })

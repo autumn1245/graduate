@@ -25,7 +25,7 @@ async function getGithubInfo(username) {
     return result && result.data
 }
 
-//解析get参数
+//解析get参数 其实ctx.params就可以拿到
 parseBody = (str) => {
     const arr = str.split('?')
     const temp = arr[1]
@@ -37,6 +37,8 @@ parseBody = (str) => {
     })
     return obj
 }
+
+
 
 
 class UserController {
@@ -88,34 +90,39 @@ class UserController {
     // 站内用户登录
     // 使用
     static async defaultLogin(ctx) {
-        console.log('4-----y', ctx, 'ctx-----')
-        const urlGet = ctx.url
-        const result = parseBody(urlGet)
-        console.log('result----', result)
-        const validator = ctx.validate(result, {
+        console.log('4-----y', ctx.params, 'ctx-----')
+            // const urlGet = ctx.url
+            // const result = parseBody(urlGet)
+            // const validator = ctx.validate(result, {
+            //     nickname: Joi.string(),
+            //     password: Joi.string(),
+            // });
+        const validator = ctx.validate(ctx, {
             nickname: Joi.string(),
             password: Joi.string(),
         });
         if (validator) {
-            const { nickname, password } = result
-            const user = await User.findOne({
-                where: { u_nickname: nickname },
-            });
-
+            //  const { nickname, password } = result
+            const { nickname, password } = ctx.params
+            const user = await User.findOne({ where: { u_nickname: nickname } });
+            console.log(user, 'user=======')
             if (!user) {
                 // ctx.client(403, '用户不存在')
                 ctx.body = { status: 403, text: '用户不存在' }
             } else {
                 // const isMatch = await comparePassword(PSW.default.decrypt(password), user.password)
-                const isMatch = await comparePassword(password, user.password);
+                console.log(password, user.u_password, 'password=====================')
+                const isMatch = password === user.u_password
+                console.log(isMatch, 'isMatch===')
                 if (!isMatch) {
                     // ctx.client(403, '密码不正确')
                     // ctx.throw(403, '密码不正确')
                     ctx.body = { status: 403, text: '密码不正确' }
                 } else {
-                    const { id } = user
+                    const { id, u_name } = user
                     // ctx.client(200, '登录成功', { username: user.username, role, userId: id, token })
-                    ctx.body = { username: user.u_username, userId: id }
+                    // ctx.body = { username: user.u_username, userId: id }
+                    ctx.body = { status: 200, text: '登录成功', data: { username: u_name, userId: id } }
                 }
             }
         }
@@ -186,19 +193,16 @@ class UserController {
         const judgeResult = judgeUrl.indexOf('admin') !== -1 //true为管理员登录，false为游客登录
         if (validator) {
             const { username = '', password, nickname = '', sex, description, region } = ctx.request.body
-            console.log('ctx.request.body====', ctx.request.body, nickname);
             const result = await User.findOne({ where: { u_nickname: nickname } });
             if (result) {
-                ctx.throw(407, '昵称已经被占用！')
-                ctx.body({ status: 407 });
+                ctx.body = { status: 407, text: '昵称已经被占用！' }
             } else {
                 const user = await User.findOne({ where: { u_name: username } });
                 if (user && !user.github) {
                     ctx.throw(403, '用户名已被占用')
                 } else {
-                    console.log('走进来了 ------------------')
-                        // const decryptPassword = PSW.default.decrypt(password)
-                        // const saltPassword = await encrypt(decryptPassword)
+                    // const decryptPassword = PSW.default.decrypt(password)
+                    // const saltPassword = await encrypt(decryptPassword)
                     await User.create({
                         u_name: username,
                         u_password: password,
@@ -209,8 +213,8 @@ class UserController {
                         u_key: judgeResult ? 0 : 1,
                     });
                     // ctx.client(200, '注册成功')
-                    ctx.status = 200
-                    ctx.body = { status: 200 }
+                    // ctx.status = 200
+                    ctx.body = { status: 200, text: '注册成功！' }
 
                 }
             }
@@ -303,21 +307,21 @@ class UserController {
         }
     }
 
-    /**
-     * 初始化用户
-     * @param {String} githubLoginName - github name
-     */
-    static async initGithubUser(githubLoginName) {
-        try {
-            const github = await getGithubInfo(githubLoginName)
-            const temp = await UserController.find({ id: github.id })
-            if (!temp) {
-                UserController.createGithubUser(github, 1)
-            }
-        } catch (error) {
-            console.trace('create github user error ==============>', error.message)
-        }
-    }
+    // /**
+    //  * 初始化用户
+    //  * @param {String} githubLoginName - github name
+    //  */
+    // static async initGithubUser(githubLoginName) {
+    //     try {
+    //         const github = await getGithubInfo(githubLoginName)
+    //         const temp = await UserController.find({ id: github.id })
+    //         if (!temp) {
+    //             UserController.createGithubUser(github, 1)
+    //         }
+    //     } catch (error) {
+    //         console.trace('create github user error ==============>', error.message)
+    //     }
+    // }
 }
 
 module.exports = UserController

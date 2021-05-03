@@ -44,9 +44,9 @@ parseBody = (str) => {
 class UserController {
     // ===== utils methods
     // 查找用户
-    static find(params) {
-        return UserModel.findOne({ where: params })
-    }
+    // static find(params) {
+    //     return UserModel.findOne({ where: params })
+    // }
 
     static async findUser(ctx) {
         console.log('findUser====', ctx, '=======', ctx.params, '=======', ctx.query)
@@ -78,9 +78,9 @@ class UserController {
 
     // 更新用户信息
     static updateUserById(userId, data) {
-            return UserModel.update(data, { where: { id: userId } })
+             console.log(userId,data,'data===')
+            return User.update(data, { where: { id: userId } })
         }
-        // ===== utils methods
 
     // 登录
     static async login(ctx) {
@@ -182,7 +182,6 @@ class UserController {
 
     // 注册
     static async register(ctx) {
-        console.log(' ctx.request.body;=======', ctx.request.body, '===', ctx);
         const validator = ctx.validate(ctx.request.body, {
             username: Joi.string(),
             password: Joi.string(),
@@ -290,20 +289,17 @@ class UserController {
         const validator = ctx.validate({
             ...ctx.params,
             ...ctx.request.body,
-        }, {
-            userId: Joi.number().required(),
-            notice: Joi.boolean(),
-            disabledDiscuss: Joi.boolean(),
-        })
+        }, {})
 
         if (validator) {
-            const { userId } = ctx.params
-            const { notice, disabledDiscuss } = ctx.request.body
-            await UserController.updateUserById(userId, { notice, disabledDiscuss })
+            const { id, username, password,nickname,sex,description,region } = ctx.request.body
+            // const { notice, disabledDiscuss } = ctx.request.body
+             await UserController.updateUserById(id, {u_name: username,u_password: password,u_nickname :nickname,u_sex: sex,u_dis :description,u_area:region })
             if (typeof disabledDiscuss !== 'undefined') {
                 await IpModel.update({ auth: !disabledDiscuss }, { where: { userId: parseInt(userId) } })
             }
-            ctx.status = 204
+            ctx.body = { status: 200, text: '修改成功！' }
+
         }
     }
 

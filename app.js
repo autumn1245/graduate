@@ -7,16 +7,22 @@ const bodyparser = require('koa-bodyparser')
 const logger = require('koa-logger')
 const cors = require('koa-cors')
 const index = require('./routes/index')
-const users = require('./routes/users')
-
+// const users = require('./routes/users')
+// const picture = require('./routes/picture')
+const koaBody  = require('koa-body')
+// const multer = require('koa-multer')
 // error handler
 onerror(app)
 
+
+
 app.use(cors())
     // middlewares
-app.use(bodyparser({
-    enableTypes: ['json', 'form', 'text']
-}))
+// app.use(bodyparser({
+//     enableTypes: ['json', 'form', 'text']
+// }))
+
+
 app.use(json())
 app.use(logger())
 app.use(require('koa-static')(__dirname + '/public'))
@@ -24,6 +30,24 @@ app.use(require('koa-static')(__dirname + '/public'))
 app.use(views(__dirname + '/views', {
     extension: 'pug'
 }))
+// app.use(multer())
+
+
+
+
+app.use(koaBody(
+    {
+
+    multipart: true, // 支持文件上传
+    formidable: {
+      maxFieldsSize: 100 * 1024 * 1024, // 最大文件为10兆
+      multipart: true // 是否支持 multipart-formdate 的表单
+    }
+    }
+    )
+);
+
+
 
 app.use(async(ctx, next) => {
     const start = new Date()
@@ -35,28 +59,17 @@ app.use(async(ctx, next) => {
     };
     console.log(`${ctx.method} ${ctx.url} - ${ms}ms  ${JSON.stringify(ctx.params)}`)
     await next();
-
-    // const req = ctx.request
-    // const url = req.url	// 请求的url
-    // const method = req.method	// 请求的方法
-    // let post_data = ''
-    // ctx.req.addListener('data', (postDataChunk) => {
-    //     console.log('收到post数据 ---->', postDataChunk)
-    //     post_data += postDataChunk
-    // })
-    // ctx.req.addListener('end', () => {
-    //     console.log('接收post数据完毕 ---->', post_data)
-    // })
-    // ctx.body = {
-    //     url,
-    //     method,
-    // }
-    // console.log('ctx.body=========',ctx.body)
 })
+
+
+
 
 // routes
 app.use(index.routes(), index.allowedMethods())
-app.use(users.routes(), users.allowedMethods())
+// app.use(users.routes(), users.allowedMethods())
+// app.use(picture.routes(), picture.allowedMethods())
+
+
 
 // error-handling
 app.on('error', (err, ctx) => {

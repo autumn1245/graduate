@@ -1,25 +1,9 @@
 const Joi = require('joi')
 const axios = require('axios')
-const PSW = require('../utils/password')
-    // const { GITHUB } = require('../config')
-    // const { decodeQuery } = require('../utils')
-    // const { comparePassword, encrypt } = require('../utils/bcrypt')
-    // const { createToken } = require('../utils/token')
-    // const { user: UserModel, comment: CommentModel, reply: ReplyModel, ip: IpModel, sequelize } = require('../models')
-    // const {
-    //   user: UserModel,
-    // //   comment: CommentModel,
-    // //   reply: ReplyModel,
-    // //   ip: IpModel,
-    //   sequelize,
-    // } = require('../models/user');
-
+// const PSW = require('../utils/password')
 const { User } = require('../models/user');
 
-/**
- * 读取 github 用户信息
- * @param {String} username - github 登录名
- */
+
 async function getGithubInfo(username) {
     const result = await axios.get(`${GITHUB.fetch_user}/${username}`)
     return result && result.data
@@ -38,9 +22,6 @@ parseBody = (str) => {
     return obj
 }
 
-
-
-
 class UserController {
     // ===== utils methods
     // 查找用户
@@ -49,7 +30,6 @@ class UserController {
     // }
 
     static async findUser(ctx) {
-        console.log('findUser====', ctx, '=======', ctx.params, '=======', ctx.query)
         const validator = ctx.validate({...ctx.params, ...ctx.query }, {
             nickname: Joi.string().required(),
         })
@@ -78,7 +58,6 @@ class UserController {
 
     // 更新用户信息
     static updateUserById(userId, data) {
-             console.log(userId,data,'data===')
             return User.update(data, { where: { id: userId } })
         }
 
@@ -105,24 +84,21 @@ class UserController {
             //  const { nickname, password } = result
             const { nickname, password } = ctx.params
             const user = await User.findOne({ where: { u_nickname: nickname } });
-            console.log(user, 'user=======')
             if (!user) {
                 // ctx.client(403, '用户不存在')
                 ctx.body = { status: 403, text: '用户不存在' }
             } else {
                 // const isMatch = await comparePassword(PSW.default.decrypt(password), user.password)
-                console.log(password, user.u_password, 'password=====================')
                 const isMatch = password === user.u_password
-                console.log(isMatch, 'isMatch===')
                 if (!isMatch) {
                     // ctx.client(403, '密码不正确')
                     // ctx.throw(403, '密码不正确')
                     ctx.body = { status: 403, text: '密码不正确' }
                 } else {
-                    const { id, u_name } = user
+                    const { id, u_name,u_nickname } = user
                     // ctx.client(200, '登录成功', { username: user.username, role, userId: id, token })
                     // ctx.body = { username: user.u_username, userId: id }
-                    ctx.body = { status: 200, text: '登录成功', data: { username: u_name, userId: id } }
+                    ctx.body = { status: 200, text: '登录成功', data: { username: u_name, nickname:u_nickname,userId: id } }
                 }
             }
         }
@@ -191,7 +167,7 @@ class UserController {
         const judgeUrl = (ctx || {}).url
         const judgeResult = judgeUrl.indexOf('admin') !== -1 //true为管理员登录，false为游客登录
         if (validator) {
-            const { username = '', password, nickname = '', sex, description, region } = ctx.request.body
+            const { username , password, nickname , sex , description , region  } = ctx.request.body
             const result = await User.findOne({ where: { u_nickname: nickname } });
             if (result) {
                 ctx.body = { status: 407, text: '昵称已经被占用！' }
@@ -206,9 +182,9 @@ class UserController {
                         u_name: username,
                         u_password: password,
                         u_nickname: nickname,
-                        u_dis: description,
-                        u_sex: sex,
-                        u_area: region,
+                        u_dis: description||'',
+                        u_sex: sex||'',
+                        u_area: region||'',
                         u_key: judgeResult ? 0 : 1,
                     });
                     // ctx.client(200, '注册成功')
@@ -224,47 +200,52 @@ class UserController {
      * 获取用户列表
      */
     static async getList(ctx) {
-        const validator = ctx.validate(ctx.query, {
-            username: Joi.string().allow(''),
-            type: Joi.number(), // 检索类型 type = 1 github 用户 type = 2 站内用户 不传则检索所有
-            'rangeDate[]': Joi.array(),
-            page: Joi.string(),
-            pageSize: Joi.number(),
-        })
+        // const validator = ctx.validate(ctx.query, {
+        //     username: Joi.string().allow(''),
+        //     // type: Joi.number(), // 检索类型 type = 1 github 用户 type = 2 站内用户 不传则检索所有
+        //     'rangeDate[]': Joi.array(),
+        //     page: Joi.string(),
+        //     pageSize: Joi.number(),
+        // })
 
-        if (validator) {
-            const { page = 1, pageSize = 10, username, type } = ctx.query
-            const rangeDate = ctx.query['rangeDate[]']
-            const where = {
-                role: { $not: 1 },
-            }
+        // if (validator) {
+            console.log('进来了')
+            // const { page = 1, pageSize = 10, username, type } = ctx.query
+            // const rangeDate = ctx.query['rangeDate[]']
+            // const where = {
+            //     role: { $not: 1 },
+            // }
 
-            if (username) {
-                where.username = {}
-                where.username['$like'] = `%${username}%`
-            }
+            // if (username) {
+            //     where.username = {}
+            //     where.username['$like'] = `%${username}%`
+            // }
 
-            if (type) {
-                where.github = parseInt(type) === 1 ? { $not: null } : null
-            }
+            // if (type) {
+            //     where.github = parseInt(type) === 1 ? { $not: null } : null
+            // }
 
-            if (Array.isArray(rangeDate) && rangeDate.length === 2) {
-                where.createdAt = { $between: rangeDate }
-            }
+            // if (Array.isArray(rangeDate) && rangeDate.length === 2) {
+            //     where.createdAt = { $between: rangeDate }
+            // }
+            const page = 1
+            const pageSize = 10
 
-            const result = await UserModel.findAndCountAll({
-                where,
+            const result = await User.findAndCountAll({
+                // where,
                 offset: (page - 1) * pageSize,
                 limit: parseInt(pageSize),
                 row: true,
                 order: [
-                    ['createdAt', 'DESC']
+                    ['createdAt']
                 ],
+                distinct: true,
             })
-
             // ctx.client(200, 'success', result)
-            ctx.body = result
-        }
+
+            ctx.body = {status:200,data:result}
+            console.log(result,'查询的用户列表')
+        // }
     }
 
     static async delete(ctx) {

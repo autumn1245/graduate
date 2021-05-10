@@ -1,9 +1,18 @@
 const router = require('koa-router')()
 const user = require('./users');
-
+const admin = require('./admin')
+const upload = require('./upload')
+const picture = require('./picture')
 // let router = new Router();
 
+
+
 router.use(user.routes())
+router.use(admin.routes())
+router.use(upload.routes())
+router.use(picture.routes())
+
+
 
 // router.get('/', async (ctx, next) => {
 //   await ctx.render('index', {

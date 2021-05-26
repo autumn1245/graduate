@@ -11,7 +11,7 @@ const {
 } = require('../controllers/user');
 
 // router.get('/find/:nickname', findUser)
-router.get('/find', findUser)
+router.get('/find', findUser)// 获取用户详细信息
 router.get('/list', getList) // 获取列表
 router.get('/', login)
 router.post('/register', register)

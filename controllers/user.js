@@ -1,5 +1,7 @@
 const Joi = require('joi')
 const axios = require('axios')
+const Sequelize = require('sequelize');
+
 // const PSW = require('../utils/password')
 const { User } = require('../models/user');
 
@@ -254,12 +256,13 @@ class UserController {
         })
 
         if (validator) {
-            await sequelize.query(
-                `delete comment, reply from comment left join reply on comment.id=reply.commentId where comment.userId=${ctx.params.userId}`
-            )
-            await UserModel.destroy({ where: { id: ctx.params.userId } })
+            // await sequelize.query(
+            //     `delete comment, reply from comment left join reply on comment.id=reply.commentId where comment.userId=${ctx.params.userId}`
+            // )
+            await User.destroy({ where: { id: ctx.params.userId } })
                 // ctx.client(200)
-            ctx.status = 204
+            // ctx.status = 204
+            ctx.body={status:200,text:'删除成功'}
         }
     }
 

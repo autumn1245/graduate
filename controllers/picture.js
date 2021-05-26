@@ -71,8 +71,10 @@ class PicController {
     }
     //获取所有的图片
     static async loadList(ctx) {
-        let pagesize = 11;
-        let curpage = 1;
+        // let pagesize = 11;
+        // let curpage = 1;
+        const { pagesize, curpage } = ctx.params
+        let allNumber = await Picture.count()
         let data = await Picture.findAndCountAll({
             limit: pagesize,
             offset: (curpage - 1) * pagesize,
@@ -80,16 +82,44 @@ class PicController {
             order: [
                 ['createdAt'],
             ],
-            // include: [{
-            //     association: Picture,
-            //     // as: 'Picture_info',
-            //     attributes:['p_url']
-            // }],
             row: true,
             distinct: true,
         });
-        ctx.body = ({status: 200, data})
+        const {rows} = data
+        ctx.body = ({ status: 200, data: { rows ,allNumber}})
     }
+    // 搜索图片
+    static async searchPic(ctx) {
+        const validator = ctx.validate({...ctx.params, ...ctx.query }, {
+            searchId: Joi.required(),
+        })
+        if (validator) {
+            const {searchId} = ctx.request.body
+            const data = await Picture.findAll({ where: { p_sid: searchId } })
+            const allNumber  = (data||[]).length
+            ctx.body = {status:200,data:{rows:data,allNumber}}
+        }
+        else {
+            ctx.body = {status:204,text:'查询失败！'}
+        }
+        
+    }
+    //搜索用户上传的所有图片
+    static async findHistory(ctx) {
+        const validator = ctx.validate({...ctx.params, ...ctx.query }, {
+            searchUserId: Joi.required(),
+        })
+        if (validator) {
+            const {searchUserId} = ctx.request.body
+            const data = await Picture.findAll({ where: { p_uid: searchUserId } })
+            ctx.body = {status:200,data}
+        }
+        else {
+            ctx.body = {status:204,text:'查询失败！'}
+        }
+    }
+    
+
 }
 
 module.exports = PicController

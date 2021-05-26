@@ -3,6 +3,7 @@ const user = require('./users');
 const admin = require('./admin')
 const upload = require('./upload')
 const picture = require('./picture')
+const collect = require('./collect')
 // let router = new Router();
 
 
@@ -11,7 +12,7 @@ router.use(user.routes())
 router.use(admin.routes())
 router.use(upload.routes())
 router.use(picture.routes())
-
+router.use(collect.routes())
 
 
 // router.get('/', async (ctx, next) => {

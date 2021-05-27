@@ -26,31 +26,44 @@ class CollectController{
     
     //搜索用户收藏的所有图片
     static async findStarPic(ctx) {
+        let resu = []
         Picture.belongsTo(Collect, { foreignKey: 'id', targetKey: 'c_uid' });
         const validator = ctx.validate({...ctx.params, ...ctx.query }, {
             searchUserId: Joi.required(),
         })
-        if (validator) {
-            const { searchUserId } = ctx.request.body
+        const { searchUserId } = ctx.request.body
 
+        const tempData = await Collect.findAll({ where: { c_uid: searchUserId } })||[]
+
+        if (validator) {
             // const data = await Collect.findAll({ where: { c_uid: searchUserId } })
-            const data = await Picture.findAll({
-                include: [{
-                    model: Collect,
-                    where: {
-                        c_pid: searchUserId
-                    },
-                //    through: {
-                //     attributes: ['createdAt'], //过滤属性
-                //     where: {completed: true}
-                //   },
-                    required: false  //默认为true  当userRoom表没有数据  回调将会返回为空  fasle 的时候返回用户信息 userRoom表有信息则添加一个字段 没有则之返回用户信息
-                  }]
-            }).then((data) => {
-                console.log(data, '这里是查询的收藏的数据')
-                ctx.body = {status:200,data}
-            })
+            for (let i = 0; i < tempData.length; i++){
+                const {c_pid} = tempData[i].dataValues
+                // const data = await Picture.findAll({
+                //     include: [{
+                //         model: Collect,
+                //         where: {
+                //             id:c_pid
+                //         },
+                //     //    through: {
+                //     //     attributes: ['createdAt'], //过滤属性
+                //     //     where: {completed: true}
+                //     //   },
+                //         required: false  //默认为true  当userRoom表没有数据  回调将会返回为空  fasle 的时候返回用户信息 userRoom表有信息则添加一个字段 没有则之返回用户信息
+                //       }]
+                // }).then((data) => {
+                //      console.log(data, '这里是查询的收藏的数据')
+                //     resu[i]=data
+                // })
+                let tempDa = await Picture.findAll({ where: { id: c_pid } }).then((tem) => {
+                    console.log(tem, 'tem======')
+                    resu.push( tem)
+                })
+            }
             // const result = await Picture/findAll({where:{id:}})
+            console.log(resu,'resu====',typeof(resu),resu.constructor ===Array)
+            ctx.body = {status:200,data:resu}
+
         }
         else {
             ctx.body = {status:204,text:'查询失败！'}

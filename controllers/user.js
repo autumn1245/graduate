@@ -4,6 +4,7 @@ const Sequelize = require('sequelize');
 
 // const PSW = require('../utils/password')
 const { User } = require('../models/user');
+const { Picture } = require('../models/picture');
 
 
 async function getGithubInfo(username) {
@@ -211,7 +212,6 @@ class UserController {
         // })
 
         // if (validator) {
-            console.log('进来了')
             // const { page = 1, pageSize = 10, username, type } = ctx.query
             // const rangeDate = ctx.query['rangeDate[]']
             // const where = {
@@ -250,20 +250,50 @@ class UserController {
         // }
     }
 
-    static async delete(ctx) {
-        const validator = ctx.validate(ctx.params, {
-            userId: Joi.number().required(),
-        })
 
-        if (validator) {
+    static async picList(ctx) {
+        const page = 1
+        const pageSize = 10
+
+        const result = await Picture.findAndCountAll({
+            // where,
+            offset: (page - 1) * pageSize,
+            limit: parseInt(pageSize),
+            row: true,
+            order: [
+                ['createdAt']
+            ],
+            distinct: true,
+        })
+        // ctx.client(200, 'success', result)
+
+        ctx.body = {status:200,data:result}
+        console.log(result,'查询的图片列表')
+    }
+
+    static async deletePic(ctx) {
+        
+    }
+
+    static async delete(ctx) {
+        // const validator = ctx.validate(ctx.params, {
+        //     userId: Joi.number().required(),
+        // })
+
+        // if (validator) {
             // await sequelize.query(
             //     `delete comment, reply from comment left join reply on comment.id=reply.commentId where comment.userId=${ctx.params.userId}`
             // )
-            await User.destroy({ where: { id: ctx.params.userId } })
+            const resu= await User.destroy({ where: { id: ctx.params.userId } })
                 // ctx.client(200)
             // ctx.status = 204
             ctx.body={status:200,text:'删除成功'}
-        }
+        // }
+        // else {
+           
+        // ctx.body = { status: 204, text: '删除失败，请重试！' }
+        // }
+        // }
     }
 
     /**
